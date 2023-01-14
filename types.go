@@ -1,15 +1,15 @@
 package main
 
 type LastModified struct {
-	day   string
-	month string
-	year  string
+	Day   string
+	Month string
+	Year  string
 }
 
 type FileInfo struct {
-	name         string
-	keyword      string
-	lastModified LastModified
+	Name         string
+	Keyword      string
+	LastModified LastModified
 }
 
 type FileIndex []FileInfo

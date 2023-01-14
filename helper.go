@@ -1,10 +1,13 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
+	"strings"
 )
 
 var months = [12]string{
@@ -40,11 +43,11 @@ func listFiles(dirPath string) (FileIndex, error) {
 	for _, file := range files {
 		if !file.IsDir() {
 			fileInfo := FileInfo{
-				name: file.Name(),
-				lastModified: LastModified{
-					day:   fmt.Sprint(file.ModTime().Day()),
-					month: months[file.ModTime().Month()-1],
-					year:  fmt.Sprint(file.ModTime().Year()),
+				Name: file.Name(),
+				LastModified: LastModified{
+					Day:   fmt.Sprint(file.ModTime().Day()),
+					Month: months[file.ModTime().Month()-1],
+					Year:  fmt.Sprint(file.ModTime().Year()),
 				},
 			}
 
@@ -73,4 +76,62 @@ func clearTerminal() {
 	command := exec.Command(clearCommand)
 	command.Stdout = os.Stdout
 	command.Run()
+}
+
+func organizeFiles(sortBy string, dirPath string) error {
+	fileIndex, err := listFiles(dirPath)
+
+	if err != nil {
+		return err
+	}
+
+	if sortBy == "-d" {
+		for _, fileInfo := range fileIndex {
+			createFolder(filepath.Join(
+				fileInfo.LastModified.Year,
+				fileInfo.LastModified.Month,
+				fileInfo.LastModified.Day,
+			))
+			moveFile(
+				fileInfo.Name,
+				filepath.Join(
+					fileInfo.LastModified.Year,
+					fileInfo.LastModified.Month,
+					fileInfo.LastModified.Day,
+					fileInfo.Name,
+				),
+			)
+		}
+	} else if sortBy == "-n" {
+		for index, fileInfo := range fileIndex {
+			title := strings.ToUpper(strings.Split(fileInfo.Name, "_")[0])
+
+			splittedTitle := strings.Split(title, " ")
+
+			keyword := strings.ToUpper(splittedTitle[0])
+
+			fileIndex[index].Keyword = keyword
+		}
+
+		if err != nil {
+			fmt.Println(err.Error())
+		}
+
+		for _, fileInfo := range fileIndex {
+			createFolder(fileInfo.Keyword)
+
+			oldPath := fileInfo.Name
+			newPath := filepath.Join(fileInfo.Keyword, fileInfo.Name)
+
+			err := moveFile(oldPath, newPath)
+
+			if err != nil {
+				fmt.Println(err.Error())
+			}
+		}
+	} else {
+		return errors.New("argumentos incorretos")
+	}
+
+	return nil
 }
