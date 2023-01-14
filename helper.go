@@ -4,9 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
-	"runtime"
 	"strings"
 )
 
@@ -66,18 +64,6 @@ func moveFile(sourcePath string, destinationPath string) error {
 	return os.Rename("./"+sourcePath, "./"+destinationPath)
 }
 
-func clearTerminal() {
-	clearCommand := "clear"
-
-	if runtime.GOOS == "windows" {
-		clearCommand = "cls"
-	}
-
-	command := exec.Command(clearCommand)
-	command.Stdout = os.Stdout
-	command.Run()
-}
-
 func organizeFiles(sortBy string, dirPath string) error {
 	fileIndex, err := listFiles(dirPath)
 
@@ -114,7 +100,7 @@ func organizeFiles(sortBy string, dirPath string) error {
 		}
 
 		if err != nil {
-			fmt.Println(err.Error())
+			return err
 		}
 
 		for _, fileInfo := range fileIndex {
@@ -126,7 +112,7 @@ func organizeFiles(sortBy string, dirPath string) error {
 			err := moveFile(oldPath, newPath)
 
 			if err != nil {
-				fmt.Println(err.Error())
+				return err
 			}
 		}
 	} else {

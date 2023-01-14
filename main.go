@@ -14,9 +14,12 @@ import (
 )
 
 func main() {
+	var sortBy string
+	var dirPath string
+
 	application := app.New()
 	window := application.NewWindow("Organizador de Arquivos")
-	window.Resize(fyne.NewSize(800, 600))
+	window.Resize(fyne.NewSize(600, 450))
 
 	title := canvas.NewText("Como deseja organizar os arquivos?", color.White)
 	title.TextStyle = fyne.TextStyle{
@@ -30,7 +33,7 @@ func main() {
 	textWidget.Alignment = fyne.TextAlignCenter
 	textWidget.Wrapping = fyne.TextWrapWord
 
-	button := widget.NewButton(
+	selectFolderButton := widget.NewButton(
 		"Selecionar pasta",
 		func() {
 			dialog.ShowFolderOpen(func(uri fyne.ListableURI, err error) {
@@ -40,11 +43,22 @@ func main() {
 					if uri != nil {
 						fmt.Println(uri.Path())
 						textWidget.Text = uri.Path()
+						textWidget.Show()
 					}
 				}
 
-				textWidget.Show()
 			}, window)
+		},
+	)
+
+	okButton := widget.NewButton(
+		"OK",
+		func() {
+			err := organizeFiles(sortBy, dirPath)
+
+			if err != nil {
+				fmt.Println(err.Error())
+			}
 		},
 	)
 
@@ -54,14 +68,19 @@ func main() {
 			"Por data",
 		},
 		func(value string) {
-			fmt.Println("Radio set to", value)
+			if value == "Por nome" {
+				sortBy = "-n"
+			} else {
+				sortBy = "-d"
+			}
 		},
 	)
 
 	buttonHBox := container.New(
 		layout.NewHBoxLayout(),
 		layout.NewSpacer(),
-		button,
+		selectFolderButton,
+		okButton,
 		layout.NewSpacer(),
 	)
 
